@@ -1,5 +1,5 @@
 ﻿
-Shader "Custom/03SurfaceShading"
+Shader "Mike/RayMarchLit_Built-in"
 {
     Properties
     {
@@ -7,7 +7,7 @@ Shader "Custom/03SurfaceShading"
         _Radius ("Radius", float) = 1
         _Center ("Center", vector) = (0, 0, 0, 1)
         _Color ("Color", color) = (1, 1, 1, 1)
-        _Steps ("Steps", float) = .1
+        _Steps ("Steps", float) = 256
         _MinDistance ("Min Distance", float) = .01
     }
     SubShader
