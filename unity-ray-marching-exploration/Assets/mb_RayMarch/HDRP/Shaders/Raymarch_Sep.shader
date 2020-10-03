@@ -1,4 +1,6 @@
-﻿Shader "Custom/Raymarch_Sep"
+﻿//https://wzhfantastic.github.io/2018/03/22/VolumeRenderingInUnity(PartOne)/
+
+Shader "Custom/Raymarch_Sep"
 {
     Properties
     {

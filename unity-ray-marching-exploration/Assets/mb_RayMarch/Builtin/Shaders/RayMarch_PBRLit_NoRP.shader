@@ -1,4 +1,5 @@
-﻿
+﻿// https://www.shadertoy.com/view/XlKSDR#
+
 Shader "Mike/RayMarch_PBRLit_NoRP"
 {
     Properties
@@ -10,7 +11,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
         _Steps ("Steps", float) = .1
         _MinDistance ("Min Distance", float) = .01
         _SpecularPower ("Specular Power", float) = .01
-        _Gloss ("Gloss", float) = .01
+        _Roughness ("Roughness", float) = .03
     }
     SubShader
     {
@@ -39,7 +40,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             float _Steps;
             float _MinDistance;
             float _SpecularPower;
-            float _Gloss;
+            float _Roughness;
             float3 color;
             
             struct appdata {
@@ -72,6 +73,8 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
 
             float D_GGX(float linearRoughness, float NoH, const float3 h) {
                 // Walter et al. 2007, "Microfacet Models for Refraction through Rough Surfaces"
+                // GGX is an analytic BSDF model that takes into account micro-facet distribution of an 
+                // underlying material
                 float oneMinusNoHSquared = 1.0 - NoH * NoH;
                 float a = NoH * linearRoughness;
                 float k = linearRoughness / (oneMinusNoHSquared + a * a);
@@ -93,6 +96,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             }
 
             float F_Schlick(float f0, float f90, float VoH) {
+                // Fresnel
                 return f0 + (f90 - f0) * pow5(1.0 - VoH);
             }
 
@@ -105,6 +109,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             }
 
             float Fd_Lambert() {
+                // ????
                 return 1.0 / PI;
             }
 
@@ -123,6 +128,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             }
 
             float3 OECF_sRGBFast(const float3 _linear) {
+                // ????
                 return pow(_linear, float3(1 / 2.2, 1 / 2.2, 1 / 2.2));
             }
 
@@ -166,15 +172,25 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 fixed3 lightCol = _LightColor0.rgb; // Light color
                 
                 // We've hit something in the scene
+                // View direction?
                 float3 v = normalize(-direction);
+                // Normal
                 float3 n = normal(position);
-                float3 l = normalize(float3(0.6, 0.7, -0.7));
+                // Light?
+                // float3 l = normalize(float3(0.6, 0.7, -0.7));
+                float3 l = normalize(lightDir);
+                // Specular
                 float3 h = normalize(v + l);
+                // ??
                 float3 r = normalize(reflect(direction, n));
 
+                // ???
                 float NoV = abs(dot(n, v)) + 1e-5;
+                // ???
                 float NoL = saturate(dot(n, l));
+                // ???
                 float NoH = saturate(dot(n, h));
+                // ???
                 float LoH = saturate(dot(l, h));
 
                 float3 baseColor = float3(0, 0, 0);
@@ -186,7 +202,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
 
                 // Metallic objects
                 baseColor = _Color;
-                roughness = 0.2;
+                roughness = _Roughness;
 
                 float linearRoughness = roughness * roughness;
                 float3 diffuseColor = (1.0 - metallic) * baseColor.rgb;
@@ -195,9 +211,13 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 float attenuation = shadow(position, l);
 
                 // specular BRDF
+                // Microfacet distribution function
                 float D = D_GGX(linearRoughness, NoH, h);
+                // Visibility (shadow?)
                 float V = V_SmithGGXCorrelated(linearRoughness, NoV, NoL);
+                // Fresnel
                 float3  F = F_Schlick(f0, LoH);
+                // BRDF
                 float3 Fr = (D * V) * F;
 
                 // diffuse BRDF
@@ -299,8 +319,6 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
 
                 return float3(0,0,0);
             }
-
-            
 
             // Vertex function
             v2f vert (appdata v) {
