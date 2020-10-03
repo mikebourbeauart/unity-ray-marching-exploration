@@ -1,4 +1,4 @@
-﻿Shader "Mike/RayMarchLit_Sep"
+﻿Shader "Mike/RayMarchLit_Sep_NoRP"
 {
     Properties
     {

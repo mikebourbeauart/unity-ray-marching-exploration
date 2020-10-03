@@ -9,6 +9,8 @@ Shader "Custom/03SurfaceShading"
         _Color ("Color", color) = (1, 1, 1, 1)
         _Steps ("Steps", float) = .1
         _MinDistance ("Min Distance", float) = .01
+        _SpecularPower ("Specular Power", float) = .01
+        _Gloss ("Gloss", float) = .01
     }
     SubShader
     {
@@ -33,6 +35,8 @@ Shader "Custom/03SurfaceShading"
             float4 _Color;
             float _Steps;
             float _MinDistance;
+            float _SpecularPower;
+            float _Gloss;
             
             struct appdata {
                 float4 vertex : POSITION;
@@ -47,13 +51,17 @@ Shader "Custom/03SurfaceShading"
 
             
 
-            fixed4 simpleLambert (fixed3 normal) {
+            fixed4 simpleLambert (fixed3 normal, fixed3 viewDirection) {
+                // Diff
                 fixed3 lightDir = _WorldSpaceLightPos0.xyz; // Light direction
                 fixed3 lightCol = _LightColor0.rgb; // Light color
-                
+                // Specular
+                fixed3 h = (lightDir - viewDirection) / 2.;
+                fixed s = pow( dot(normal, h), _SpecularPower) * _Gloss;
+
                 fixed NdotL = max(dot(normal, lightDir),0);
                 fixed4 c;
-                c.rgb = _Color * lightCol * NdotL;
+                c.rgb = _Color * lightCol * NdotL + s;
                 c.a = 1;
                 return c;
             }
@@ -76,17 +84,17 @@ Shader "Custom/03SurfaceShading"
                 );
             }
 
-            fixed4 renderSurface(float3 p)
+            fixed4 renderSurface(float3 p, float3 direction)
             {
             float3 n = normal(p);
-            return simpleLambert(n);
+            return simpleLambert(n, direction);
             }
 
             fixed4 raymarch (float3 position, float3 direction) {
                 for (int i = 0; i < _Steps; i++) {
                     float distance = map(position);
                     if (distance < _MinDistance)
-                        return renderSurface(position);
+                        return renderSurface(position, direction);
                     
                     position += distance * direction;
                 }

@@ -11,8 +11,7 @@
         Tags {"Queue"="Transparent"}
         
 
-        Pass
-        {
+        Pass{
             Tags {"LightMode" = "ForwardBase"}
             Blend SrcAlpha OneMinusSrcAlpha
             
@@ -26,14 +25,14 @@
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
-                float3 normal: NORMAL;
+                // float3 normal: NORMAL;
             };
 
             struct v2f
             {
-                float3 wPos : TEXCOORD0;
+                float3 wPos : TEXCOORD1;
                 float4 pos : SV_POSITION; 
-                fixed4 diff: COLOR0;
+                // fixed4 diff: COLOR0;
             };
 
             v2f vert (appdata v)
@@ -41,9 +40,6 @@
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.wPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-                half3 worldNormal = UnityObjectToWorldNormal(v.normal);
-                half nl = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
-                o.diff = nl * _LightColor0;
                 return o;
             }
 
@@ -62,18 +58,23 @@
                     
                     position += direction * STEP_SIZE;
                 }
+                // Depth
                 return float3(0,0,0);
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
-                float3 viewDirection = normalize(i.wPos - _WorldSpaceCameraPos);
                 float3 worldPosition = i.wPos;
+                float3 viewDirection = normalize(i.wPos - _WorldSpaceCameraPos);
                 float3 depth = RaymarchHit(worldPosition, viewDirection);
+
+                // Normal
+                half3 worldNormal = depth - float3(0,0,0);
+                half normal = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
 
                 if(length(depth) != 0)
                 {
-                    depth *= i.diff;
+                    depth *= normal * _LightColor0;
                     return fixed4(depth, 1);
                 }
                 else 
