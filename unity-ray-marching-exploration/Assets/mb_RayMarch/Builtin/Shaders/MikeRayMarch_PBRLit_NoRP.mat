@@ -22,11 +22,11 @@ Material:
     m_Floats:
     - _Gloss: 0.5
     - _MinDistance: 0.01
-    - _Radius: 0.45
+    - _Radius: 0.5
     - _Roughness: 0.3
     - _SpecularPower: 1
     - _Steps: 15.74
     m_Colors:
     - _Center: {r: 0, g: 0, b: 0, a: 1}
-    - _Color: {r: 1, g: 0.23113209, b: 0.23113209, a: 1}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

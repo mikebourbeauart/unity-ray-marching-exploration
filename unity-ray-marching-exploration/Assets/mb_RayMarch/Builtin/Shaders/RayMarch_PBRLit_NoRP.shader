@@ -114,6 +114,31 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             }
 
             //------------------------------------------------------------------------------
+            // Indirect lighting
+            //------------------------------------------------------------------------------
+
+            float3 Irradiance_SphericalHarmonics(const float3 n) {
+                // Irradiance from "Ditch River" IBL (http://www.hdrlabs.com/sibl/archive.html)
+                return max(
+                    float3( 0.754554516862612,  0.748542953903366,  0.790921515418539)
+                    + float3(-0.083856548007422,  0.092533500963210,  0.322764661032516) * (n.y)
+                    + float3( 0.308152705331738,  0.366796330467391,  0.466698181299906) * (n.z)
+                    + float3(-0.188884931542396, -0.277402551592231, -0.377844212327557) * (n.x)
+                    , 0.0);
+            }
+
+            float2 PrefilteredDFG_Karis(float roughness, float NoV) {
+                // Karis 2014, "Physically Based Material on Mobile"
+                const float4 c0 = float4(-1.0, -0.0275, -0.572,  0.022);
+                const float4 c1 = float4( 1.0,  0.0425,  1.040, -0.040);
+
+                float4 r = roughness * c0 + c1;
+                float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
+
+                return float2(-1.04, 1.04) * a004 + r.zw;
+            }
+
+            //------------------------------------------------------------------------------
             // Tone mapping and transfer functions
             //------------------------------------------------------------------------------
 
@@ -231,7 +256,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 return c;
 
 
-                // color = mul((intensity * attenuation * NoL) * float3(0.98, 0.92, 0.89));
+                color *= (intensity * attenuation * NoL) * float3(0.98, 0.92, 0.89);
 
                 // // diffuse indirect
                 // float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
@@ -256,7 +281,10 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 // float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
 
                 // color += ibl * indirectIntensity;
-            
+                // fixed4 c;
+                // c.rgb = color;
+                // c.a = 1;
+                // return c;
             }
 
             
