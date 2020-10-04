@@ -9,8 +9,8 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Custom_PBR_Examples
   m_Shader: {fileID: 4800000, guid: 5e04649622d0f0e4b84c8ceb1d02d265, type: 3}
-  m_ShaderKeywords: _FRESNELMODEL_SPHERICALGAUSSIAN _GEOSHADOWMODEL_ASHIKHMINSHIRLEY
-    _NORMALDISTMODEL_GGX _SMITHGEOSHADOWMODEL_GGX
+  m_ShaderKeywords: _FRESNELMODEL_SCHLICKIOR _GEOSHADOWMODEL_KELEMEN _NORMALDISTMODEL_GGX
+    _SMITHGEOSHADOWMODEL_GGX
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -21,19 +21,19 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Floats:
-    - _Anisotropic: 0
+    - _Anisotropic: 0.69
     - _ENABLE_D: 0
     - _ENABLE_F: 0
     - _ENABLE_G: 0
     - _ENABLE_NDF: 0
-    - _FresnelModel: 2
-    - _GeoShadowModel: 0
-    - _Glossiness: 0.952
-    - _Ior: 1
+    - _FresnelModel: 1
+    - _GeoShadowModel: 4
+    - _Glossiness: 0.8
+    - _Ior: 4
     - _Metallic: 1
     - _NormalDistModel: 4
     - _SmithGeoShadowModel: 3
-    - _SpecularPower: 0.978
+    - _SpecularPower: 0.983
     - _SpecularRange: 40
     - _UnityLightingContribution: 1
     m_Colors:
