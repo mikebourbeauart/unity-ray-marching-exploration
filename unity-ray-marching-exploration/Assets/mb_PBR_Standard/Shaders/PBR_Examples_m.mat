@@ -21,20 +21,20 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Floats:
-    - _Anisotropic: 0.69
+    - _Anisotropic: 0
     - _ENABLE_D: 0
     - _ENABLE_F: 0
     - _ENABLE_G: 0
     - _ENABLE_NDF: 0
     - _FresnelModel: 1
     - _GeoShadowModel: 4
-    - _Glossiness: 0.8
-    - _Ior: 4
-    - _Metallic: 1
+    - _Glossiness: 0.5
+    - _Ior: 1.5
+    - _Metallic: 0
     - _NormalDistModel: 4
     - _SmithGeoShadowModel: 3
-    - _SpecularPower: 0.983
-    - _SpecularRange: 40
+    - _SpecularPower: 1
+    - _SpecularRange: 1
     - _UnityLightingContribution: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
