@@ -52,13 +52,13 @@ Shader "Custom/03SurfaceShading"
             
 
             fixed4 simpleLambert (fixed3 normal, fixed3 viewDirection) {
-                // Diff
+                // Light
                 fixed3 lightDir = _WorldSpaceLightPos0.xyz; // Light direction
                 fixed3 lightCol = _LightColor0.rgb; // Light color
                 // Specular
                 fixed3 h = (lightDir - viewDirection) / 2.;
                 fixed s = pow( dot(normal, h), _SpecularPower) * _Gloss;
-
+                // Lambert
                 fixed NdotL = max(dot(normal, lightDir),0);
                 fixed4 c;
                 c.rgb = _Color * lightCol * NdotL + s;
@@ -86,10 +86,12 @@ Shader "Custom/03SurfaceShading"
 
             fixed4 renderSurface(float3 p, float3 direction)
             {
-            float3 n = normal(p);
-            return simpleLambert(n, direction);
+                float3 n = normal(p);
+                return simpleLambert(n, direction);
             }
 
+            // render
+            // traceRay
             fixed4 raymarch (float3 position, float3 direction) {
                 for (int i = 0; i < _Steps; i++) {
                     float distance = map(position);

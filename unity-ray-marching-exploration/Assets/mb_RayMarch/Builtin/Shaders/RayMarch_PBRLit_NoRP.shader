@@ -11,7 +11,7 @@ Shader "Mike/Raymarch_lambert"
         _MaxSteps ("Max Steps", int) = 16
         _MinDistance ("Min Distance", float) = .01
         _SpecularPower ("Specular Power", float) = .01
-        _Gloss ("Gloss", float) = .01
+        _Glossiness ("Gloss", float) = .01
         _Metallic ("Metallic", float) = .01
     }
     SubShader
@@ -29,9 +29,12 @@ Shader "Mike/Raymarch_lambert"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
+            #define UNITY_PASS_FORWARDBASE
             #include "UnityCG.cginc"
+            #include "AutoLight.cginc"
             #include "Lighting.cginc"
+            #pragma multi_compile_fwdbase_fullshadows  
+            #pragma target 3.0
 
             #define PI 3.14159265359
 
@@ -41,7 +44,7 @@ Shader "Mike/Raymarch_lambert"
             float _MaxSteps;
             float _MinDistance;
             float _SpecularPower;
-            float _Gloss;
+            float _Glossiness;
             float _Metallic;
             
             struct appdata {
@@ -53,6 +56,8 @@ Shader "Mike/Raymarch_lambert"
                 // float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION; // Clip space
                 float3 wPos : TEXCOORD1; // World position
+                LIGHTING_COORDS(7,8)                   //this initializes the unity lighting and shadow
+                UNITY_FOG_COORDS(9)                    //this initializes the unity fog
             };
 
             //------------------------------------------------------------------------------
@@ -117,13 +122,18 @@ Shader "Mike/Raymarch_lambert"
                 return float2(t, material);
             }
 
-            float3 normal(in float3 position) {
-                float3 epsilon = float3(0.001, 0.0, 0.0);
-                float3 n = float3(
-                    map(position + epsilon.xyy).x - map(position - epsilon.xyy).x,
-                    map(position + epsilon.yxy).x - map(position - epsilon.yxy).x,
-                    map(position + epsilon.yyx).x - map(position - epsilon.yyx).x);
-                return normalize(n);
+            float3 normal (float3 p){
+                // Epsilon
+                const float eps = 0.01;
+
+                // Gradient
+                return normalize(
+                    float3( 
+                        map(p + float3(eps, 0, 0) ) - map(p - float3(eps, 0, 0)),
+                        map(p + float3(0, eps, 0) ) - map(p - float3(0, eps, 0)),
+                        map(p + float3(0, 0, eps) ) - map(p - float3(0, 0, eps))
+                    )
+                );
             }
 
             //------------------------------------------------------------------------------
@@ -174,6 +184,31 @@ Shader "Mike/Raymarch_lambert"
             }
 
             //------------------------------------------------------------------------------
+            // Indirect lighting
+            //------------------------------------------------------------------------------
+
+            float3 Irradiance_SphericalHarmonics(const float3 n) {
+                // Irradiance from "Ditch River" IBL (http://www.hdrlabs.com/sibl/archive.html)
+                return max(
+                    float3( 0.754554516862612,  0.748542953903366,  0.790921515418539)
+                    + float3(-0.083856548007422,  0.092533500963210,  0.322764661032516) * (n.y)
+                    + float3( 0.308152705331738,  0.366796330467391,  0.466698181299906) * (n.z)
+                    + float3(-0.188884931542396, -0.277402551592231, -0.377844212327557) * (n.x)
+                    , 0.0);
+            }
+
+            float2 PrefilteredDFG_Karis(float roughness, float NoV) {
+                // Karis 2014, "Physically Based Material on Mobile"
+                const float4 c0 = float4(-1.0, -0.0275, -0.572,  0.022);
+                const float4 c1 = float4( 1.0,  0.0425,  1.040, -0.040);
+
+                float4 r = roughness * c0 + c1;
+                float a004 = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
+
+                return float2(-1.04, 1.04) * a004 + r.zw;
+            }
+
+            //------------------------------------------------------------------------------
             // Tone mapping and transfer functions
             //------------------------------------------------------------------------------
 
@@ -194,9 +229,7 @@ Shader "Mike/Raymarch_lambert"
             //------------------------------------------------------------------------------
             // Lighting
             //------------------------------------------------------------------------------
-            
-            
-            fixed4 renderSurface(float3 position, float3 direction){
+            float3 renderSurface(float3 position, float3 direction){
                 float3 n = normal(position);
                 fixed3 l = _WorldSpaceLightPos0.xyz; // Light direction
                 fixed3 lightCol = _LightColor0.rgb; // Light color
@@ -212,7 +245,7 @@ Shader "Mike/Raymarch_lambert"
                 fixed LdotH = saturate(dot(l, h));
 
                 float3 baseColor = _Color;
-                float roughness = _Gloss;
+                float roughness = _Glossiness;
                 float metallic = _Metallic;
 
                 float intensity = 2.0;
@@ -238,7 +271,7 @@ Shader "Mike/Raymarch_lambert"
                 color *= (intensity * attenuation * NdotL) * float3(0.98, 0.92, 0.89);
 
                 // diffuse indirect
-                // float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
+                float3 indirectDiffuse = Irradiance_SphericalHarmonics(n) * Fd_Lambert();
                 float indirectHit = traceRay(position, r);
                 float3 indirectSpecular = float3(0.65, 0.85, 1.0) + r.y * 0.72;
                 if (indirectHit > 0.0) {
@@ -246,9 +279,12 @@ Shader "Mike/Raymarch_lambert"
                 }
 
                 // indirect contribution
-                // float2 dfg = PrefilteredDFG_Karis(roughness, NdotV);
-                float3 specularColor = f0;// * dfg.x + dfg.y;
-                float3 ibl = diffuseColor;
+                float2 dfg = PrefilteredDFG_Karis(roughness, NdotV);
+                float3 specularColor = f0 * dfg.x + dfg.y;
+                float3 ibl = diffuseColor * indirectDiffuse + indirectSpecular * specularColor;
+
+                color += ibl * indirectIntensity;
+                return color;
 
                 fixed4 c;
                 // c.rgb = _Color * lightCol * NdotL;
@@ -260,7 +296,7 @@ Shader "Mike/Raymarch_lambert"
             //------------------------------------------------------------------------------
             // Ray casting
             //------------------------------------------------------------------------------
-            fixed4 raymarch (float3 position, float3 direction) {
+            float3 raymarch (float3 position, float3 direction) {
                 for (int i = 0; i < _MaxSteps; i++) {
                     float distance = map(position);
                     if (distance < _MinDistance)
@@ -268,7 +304,7 @@ Shader "Mike/Raymarch_lambert"
                     
                     position += distance * direction;
                 }
-                return fixed4(0,0,0,0);
+                return float3(0,0,0);
             }
             
             // Vertex function
@@ -286,6 +322,15 @@ Shader "Mike/Raymarch_lambert"
                 // Render map
                 float distance;
                 float3 color = raymarch(worldPosition, viewDirection);
+
+                // Tone mapping
+                color = Tonemap_ACES(color);
+
+                // Exponential distance fog
+                // color = lerp(color, 0.8 * float3(0.7, 0.8, 1.0), 1.0 - exp2(-0.011 * distance * distance));
+
+                // Gamma compression
+                color = OECF_sRGBFast(color);
 
                 // return color;
                 // float3 depth = raymarch(worldPosition, viewDirection);
