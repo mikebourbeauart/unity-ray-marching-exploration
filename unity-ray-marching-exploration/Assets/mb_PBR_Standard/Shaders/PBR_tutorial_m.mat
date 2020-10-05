@@ -32,7 +32,7 @@ Material:
     - _ENABLE_NDF: 0
     - _FresnelModel: 0
     - _GeoShadowModel: 3
-    - _Glossiness: 0.5
+    - _Glossiness: 0.815
     - _Ior: 1.5
     - _Metallic: 0
     - _NormalDistModel: 4

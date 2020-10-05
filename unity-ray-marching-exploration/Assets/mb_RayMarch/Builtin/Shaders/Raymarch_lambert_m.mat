@@ -21,10 +21,11 @@ Material:
     m_TexEnvs: []
     m_Floats:
     - _Gloss: 0.01
+    - _MaxSteps: 16
     - _MinDistance: 0.01
-    - _Radius: 1
+    - _Radius: 0.5
     - _SpecularPower: 0.01
-    - _Steps: 0.1
+    - _Steps: 16
     m_Colors:
     - _Center: {r: 0, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}

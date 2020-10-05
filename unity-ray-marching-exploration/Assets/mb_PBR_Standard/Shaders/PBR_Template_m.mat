@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RayMarch_PBRLit_NoRP_m
-  m_Shader: {fileID: 4800000, guid: 4df212e778f8a114a9e0858b025fb99a, type: 3}
+  m_Name: PBR_Template_m
+  m_Shader: {fileID: 4800000, guid: 2395331145bdac946acc71895e47c270, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -20,16 +20,9 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Floats:
-    - _Gloss: 0
-    - _MaxSteps: 16
+    - _Glossiness: 1
     - _Metallic: 0
-    - _MinDistance: 0.01
-    - _Radius: 0.5
-    - _Roughness: 0.3
-    - _SpecularPower: 1
-    - _StepSize: 16
-    - _Steps: 15.74
     m_Colors:
-    - _Center: {r: 0, g: 0, b: -1, a: 1}
-    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Color: {r: 1, g: 0, b: 0, a: 1}
+    - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
