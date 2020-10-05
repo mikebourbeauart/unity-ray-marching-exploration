@@ -59,7 +59,8 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             // Distance field functions
             //------------------------------------------------------------------------------
             float map (float3 p)
-            {
+            {   
+                // Sphere
                 return distance(p, _Center) - _Radius;
             }
 
@@ -71,6 +72,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 return x2 * x2 * x;
             }
 
+            // NDF Normal Distribution Function
             float D_GGX(float linearRoughness, float NoH, const float3 h) {
                 // Walter et al. 2007, "Microfacet Models for Refraction through Rough Surfaces"
                 // GGX is an analytic BSDF model that takes into account micro-facet distribution of an 
@@ -82,6 +84,7 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 return d;
             }
 
+            // GSF Geometric Shadowing Function
             float V_SmithGGXCorrelated(float linearRoughness, float NoV, float NoL) {
                 // Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"
                 float a2 = linearRoughness * linearRoughness;
@@ -90,16 +93,19 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
                 return 0.5 / (GGXV + GGXL);
             }
 
+            // Fresnel float3
             float3 F_Schlick(const float3 f0, float VoH) {
                 // Schlick 1994, "An Inexpensive BRDF Model for Physically-Based Rendering"
                 return f0 + (float3(1, 1, 1) - f0) * pow5(1.0 - VoH);
             }
 
+            // Fresnel float
             float F_Schlick(float f0, float f90, float VoH) {
                 // Fresnel
                 return f0 + (f90 - f0) * pow5(1.0 - VoH);
             }
 
+            // Fresnel scatter
             float Fd_Burley(float linearRoughness, float NoV, float NoL, float LoH) {
                 // Burley 2012, "Physically-Based Shading at Disney"
                 float f90 = 0.5 + 2.0 * linearRoughness * LoH * LoH;
@@ -191,31 +197,37 @@ Shader "Mike/RayMarch_PBRLit_NoRP"
             // Rendering
             //------------------------------------------------------------------------------
 
-            float3 renderSurface(float3 position, float3 direction) {
-                 // Light
-                fixed3 lightDir = _WorldSpaceLightPos0.xyz; // Light direction
-                fixed3 lightCol = _LightColor0.rgb; // Light color
+            float3 renderSurface(float3 position, float3 direction) {               
                 
                 // We've hit something in the scene
-                // View direction?
-                float3 v = normalize(-direction);
-                // Normal
+                // Normal direction calculations
+                // Normal direction
                 float3 n = normal(position);
-                // Light?
+                // View direction
+                float3 v = normalize(-direction);
+                // float shiftAmount = dot(n, v);
+                // n = shiftAmount < 0.0f ? n + v * (-shiftAmount + 1e-5f) : n;
+
+                // Light calculations
+                fixed3 lightDir = _WorldSpaceLightPos0.xyz; // Light direction
+                fixed3 lightCol = _LightColor0.rgb; // Light color
+                // lightDirection
                 // float3 l = normalize(float3(0.6, 0.7, -0.7));
                 float3 l = normalize(lightDir);
-                // Specular
+                // Specular halfDirection
                 float3 h = normalize(v + l);
-                // ??
+                // lightReflectDirection
                 float3 r = normalize(reflect(direction, n));
-
-                // ???
+                
+                // Normal dot light
+                float NdotL = max(0.0, dot(n, l));
+                // Normal dot view
                 float NoV = abs(dot(n, v)) + 1e-5;
-                // ???
+                // Normal dot light
                 float NoL = saturate(dot(n, l));
-                // ???
+                // Normal dot half
                 float NoH = saturate(dot(n, h));
-                // ???
+                // Light dot half
                 float LoH = saturate(dot(l, h));
 
                 float3 baseColor = float3(0, 0, 0);

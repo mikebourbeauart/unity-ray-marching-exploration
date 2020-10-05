@@ -104,7 +104,7 @@ UnityGI GetUnityGI(float3 lightColor, float3 lightDirection, float3 normalDirect
     light.color = lightColor;
     light.dir = lightDirection;
     light.ndotl = max(0.0h,dot( normalDirection, lightDirection));
-    struct UnityGIInput d;
+    UnityGIInput d;
     d.light = light;
     d.worldPos = worldPos;
     d.worldViewDir = viewDirection;
@@ -125,7 +125,6 @@ UnityGI GetUnityGI(float3 lightColor, float3 lightDirection, float3 normalDirect
     return gi;
 }
 
-
 //---------------------------
 //helper functions
 float MixFunction(float i, float j, float x) {
@@ -145,37 +144,29 @@ float sqr(float x){
 }
 //------------------------------
 
-
 //------------------------------------------------
 //schlick functions
-float SchlickFresnel(float i){
+float SchlickFresnel(float i) {
     float x = clamp(1.0-i, 0.0, 1.0);
     float x2 = x*x;
     return x2*x2*x;
 }
-float3 FresnelLerp (float3 x, float3 y, float d)
-{
+float3 FresnelLerp (float3 x, float3 y, float d) {
 	float t = SchlickFresnel(d);	
 	return lerp (x, y, t);
 }
-
-float3 SchlickFresnelFunction(float3 SpecularColor,float LdotH){
+float3 SchlickFresnelFunction(float3 SpecularColor,float LdotH) {
     return SpecularColor + (1 - SpecularColor)* SchlickFresnel(LdotH);
 }
-
-float SchlickIORFresnelFunction(float ior,float LdotH){
+float SchlickIORFresnelFunction(float ior,float LdotH) {
     float f0 = pow((ior-1)/(ior+1),2);
     return f0 +  (1 - f0) * SchlickFresnel(LdotH);
 }
-float SphericalGaussianFresnelFunction(float LdotH,float SpecularColor)
-{	
+float SphericalGaussianFresnelFunction(float LdotH,float SpecularColor) {	
 	float power = ((-5.55473 * LdotH) - 6.98316) * LdotH;
     return SpecularColor + (1 - SpecularColor)  * pow(2,power);
 }
-
 //-----------------------------------------------
-
-
 
 //-----------------------------------------------
 //normal incidence reflection calculation
@@ -188,9 +179,6 @@ float F0 (float NdotL, float NdotV, float LdotH, float roughness){
 }
 
 //-----------------------------------------------
-
-
-
 
 //-----------------------------------------------
 //Normal Distribution Functions
@@ -254,10 +242,8 @@ float WardAnisotropicNormalDistribution(float anisotropic, float NdotL, float Nd
 }
 //--------------------------
 
-
-
 //-----------------------------------------------
-//Geometric Shadowing Functions
+// Geometric Shadowing Functions
 
 float ImplicitGeometricShadowingFunction (float NdotL, float NdotV){
 	float Gs =  (NdotL*NdotV);       
@@ -374,60 +360,53 @@ float SchlickGGXGeometricShadowingFunction (float NdotL, float NdotV, float roug
 	float Gs =  (SmithL * SmithV);
 	return Gs;
 }
-
 //--------------------------
-
 
 float4 frag(VertexOutput i) : COLOR {
 
-//normal direction calculations
-     float3 normalDirection = normalize(i.normalDir);
-	 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
-     float shiftAmount = dot(i.normalDir, viewDirection);
-	 normalDirection = shiftAmount < 0.0f ? normalDirection + viewDirection * (-shiftAmount + 1e-5f) : normalDirection;
+    //normal direction calculations
+    float3 normalDirection = normalize(i.normalDir);
+    float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
+    float shiftAmount = dot(i.normalDir, viewDirection);
+    normalDirection = shiftAmount < 0.0f ? normalDirection + viewDirection * (-shiftAmount + 1e-5f) : normalDirection;
 
-//light calculations
-	 float3 lightDirection = normalize(lerp(_WorldSpaceLightPos0.xyz, _WorldSpaceLightPos0.xyz - i.posWorld.xyz,_WorldSpaceLightPos0.w));
-	 float3 lightReflectDirection = reflect( -lightDirection, normalDirection );
-	 float3 viewReflectDirection = normalize(reflect( -viewDirection, normalDirection ));
-     float NdotL = max(0.0, dot( normalDirection, lightDirection ));
-     float3 halfDirection = normalize(viewDirection+lightDirection); 
-     float NdotH =  max(0.0,dot( normalDirection, halfDirection));
-     float NdotV =  max(0.0,dot( normalDirection, viewDirection));
-     float VdotH = max(0.0,dot( viewDirection, halfDirection));
-     float LdotH =  max(0.0,dot(lightDirection, halfDirection)); 
-     float LdotV = max(0.0,dot(lightDirection, viewDirection)); 
-     float RdotV = max(0.0, dot( lightReflectDirection, viewDirection ));
-     float attenuation = LIGHT_ATTENUATION(i);
-     float3 attenColor = attenuation * _LightColor0.rgb;
+    //light calculations
+    float3 lightDirection = normalize(lerp(_WorldSpaceLightPos0.xyz, _WorldSpaceLightPos0.xyz - i.posWorld.xyz,_WorldSpaceLightPos0.w));
+    float3 lightReflectDirection = reflect( -lightDirection, normalDirection );
+    float3 viewReflectDirection = normalize(reflect( -viewDirection, normalDirection ));
+    float NdotL = max(0.0, dot( normalDirection, lightDirection ));
+    float3 halfDirection = normalize(viewDirection+lightDirection); 
+    float NdotH =  max(0.0,dot( normalDirection, halfDirection));
+    float NdotV =  max(0.0,dot( normalDirection, viewDirection));
+    float VdotH = max(0.0,dot( viewDirection, halfDirection));
+    float LdotH =  max(0.0,dot(lightDirection, halfDirection)); 
+    float LdotV = max(0.0,dot(lightDirection, viewDirection)); 
+    float RdotV = max(0.0, dot( lightReflectDirection, viewDirection ));
+    float attenuation = LIGHT_ATTENUATION(i);
+    float3 attenColor = attenuation * _LightColor0.rgb;
      
-     //get Unity Scene lighting data
-     UnityGI gi =  GetUnityGI(_LightColor0.rgb, lightDirection, normalDirection, viewDirection, viewReflectDirection, attenuation, 1- _Glossiness, i.posWorld.xyz);
-     float3 indirectDiffuse = gi.indirect.diffuse.rgb ;
-	 float3 indirectSpecular = gi.indirect.specular.rgb;
+    //get Unity Scene lighting data
+    UnityGI gi =  GetUnityGI(_LightColor0.rgb, lightDirection, normalDirection, viewDirection, viewReflectDirection, attenuation, 1- _Glossiness, i.posWorld.xyz);
+    float3 indirectDiffuse = gi.indirect.diffuse.rgb ;
+    float3 indirectSpecular = gi.indirect.specular.rgb;
 
-	 //diffuse color calculations
-	 float roughness = 1-(_Glossiness * _Glossiness);
-	 roughness = roughness * roughness;
-     float3 diffuseColor = _Color.rgb * (1.0 - _Metallic) ;
- 	 float f0 = F0(NdotL, NdotV, LdotH, roughness);
-	 diffuseColor *= f0;
-	 diffuseColor+=indirectDiffuse;
+    //diffuse color calculations
+    float roughness = 1-(_Glossiness * _Glossiness);
+    roughness = roughness * roughness;
+    float3 diffuseColor = _Color.rgb * (1.0 - _Metallic) ;
+    float f0 = F0(NdotL, NdotV, LdotH, roughness);
+    diffuseColor *= f0;
+    diffuseColor+=indirectDiffuse;
 	 
 
 
 	//Specular calculations
+    float3 specColor = lerp(_SpecularColor.rgb, _Color.rgb, _Metallic * 0.5);
+    float3 SpecularDistribution = specColor;
+    float GeometricShadow = 1;
+    float3 FresnelFunction = specColor;
 
-
-	 float3 specColor = lerp(_SpecularColor.rgb, _Color.rgb, _Metallic * 0.5);
-
-	 float3 SpecularDistribution = specColor;
-	 float GeometricShadow = 1;
-	 float3 FresnelFunction = specColor;
-
-	 //Normal Distribution Function/Specular Distribution-----------------------------------------------------	      
-
-           
+	//Normal Distribution Function/Specular Distribution-----------------------------------------------------	          
 	#ifdef _NORMALDISTMODEL_BLINNPHONG 
 		 SpecularDistribution *=  BlinnPhongNormalDistribution(NdotH, _Glossiness,  max(1,_Glossiness * 40));
  	#elif _NORMALDISTMODEL_PHONG
@@ -449,7 +428,7 @@ float4 frag(VertexOutput i) : COLOR {
 	#endif
 
 
-	 //Geometric Shadowing term----------------------------------------------------------------------------------
+	//Geometric Shadowing term----------------------------------------------------------------------------------
 	#ifdef _SMITHGEOSHADOWMODEL_NONE
 	 	#ifdef _GEOSHADOWMODEL_ASHIKHMINSHIRLEY
 			GeometricShadow *= AshikhminShirleyGeometricShadowingFunction (NdotL, NdotV, LdotH);
@@ -505,28 +484,28 @@ float4 frag(VertexOutput i) : COLOR {
 
 
  	#ifdef _ENABLE_NDF_ON
- 	 return float4(float3(1,1,1)* SpecularDistribution,1);
+ 	    return float4(float3(1,1,1)* SpecularDistribution,1);
     #endif
     #ifdef _ENABLE_G_ON 
- 	 return float4(float3(1,1,1) * GeometricShadow,1) ;
+ 	    return float4(float3(1,1,1) * GeometricShadow,1) ;
     #endif
     #ifdef _ENABLE_F_ON 
- 	 return float4(float3(1,1,1)* FresnelFunction,1);
+ 	    return float4(float3(1,1,1)* FresnelFunction,1);
     #endif
 	#ifdef _ENABLE_D_ON 
- 	 return float4(float3(1,1,1)* diffuseColor,1);
+ 	    return float4(float3(1,1,1)* diffuseColor,1);
     #endif
 
-	 //PBR
-	 float3 specularity = (SpecularDistribution * FresnelFunction * GeometricShadow) / (4 * (  NdotL * NdotV));
-     float grazingTerm = saturate(roughness + _Metallic);
-	 float3 unityIndirectSpecularity =  indirectSpecular * FresnelLerp(specColor,grazingTerm,NdotV) * max(0.15,_Metallic) * (1-roughness*roughness* roughness);
+    //PBR
+    float3 specularity = (SpecularDistribution * FresnelFunction * GeometricShadow) / (4 * (  NdotL * NdotV));
+    float grazingTerm = saturate(roughness + _Metallic);
+    float3 unityIndirectSpecularity =  indirectSpecular * FresnelLerp(specColor,grazingTerm,NdotV) * max(0.15,_Metallic) * (1-roughness*roughness* roughness);
 
-     float3 lightingModel = ((diffuseColor) + specularity + (unityIndirectSpecularity *_UnityLightingContribution));
-     lightingModel *= NdotL;
-     float4 finalDiffuse = float4(lightingModel * attenColor,1);
-     UNITY_APPLY_FOG(i.fogCoord, finalDiffuse);
-     return finalDiffuse;
+    float3 lightingModel = ((diffuseColor) + specularity + (unityIndirectSpecularity *_UnityLightingContribution));
+    lightingModel *= NdotL;
+    float4 finalDiffuse = float4(lightingModel * attenColor,1);
+    UNITY_APPLY_FOG(i.fogCoord, finalDiffuse);
+    return finalDiffuse;
 }
 ENDCG
 }
