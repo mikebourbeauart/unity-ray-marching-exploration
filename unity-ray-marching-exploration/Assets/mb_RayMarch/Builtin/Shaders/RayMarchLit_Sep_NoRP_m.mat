@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: RayMarchLit_Sep_NoRP
+  m_Name: RayMarchLit_Sep_NoRP_m
   m_Shader: {fileID: 4800000, guid: c33db0ed15b06b144a4d0a65968c8c4c, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
