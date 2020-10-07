@@ -21,7 +21,7 @@ Material:
     m_TexEnvs: []
     m_Floats:
     - _Gloss: 0
-    - _Glossiness: 0.51
+    - _Glossiness: 0.5
     - _MaxSteps: 16
     - _Metallic: 0
     - _MinDistance: 0.01
@@ -31,6 +31,6 @@ Material:
     - _StepSize: 16
     - _Steps: 15.74
     m_Colors:
-    - _Center: {r: 0, g: 0, b: -1, a: 1}
+    - _Center: {r: 0, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 0.033018887, b: 0.033018887, a: 1}
   m_BuildTextureStacks: []

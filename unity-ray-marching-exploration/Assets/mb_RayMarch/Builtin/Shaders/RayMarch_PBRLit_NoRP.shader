@@ -17,7 +17,7 @@ Shader "Mike/Raymarch_lambert"
     SubShader
     {
         // No culling or depth
-        // Cull Off ZWrite Off ZTest Always
+        Cull Off ZWrite Off ZTest Always
         Tags {"Queue"="Transparent"}
 
         
@@ -55,6 +55,7 @@ Shader "Mike/Raymarch_lambert"
             struct v2f {
                 // float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION; // Clip space
+                // float4 depth : SV_DEPTH; // Clip space
                 float3 wPos : TEXCOORD1; // World position
                 LIGHTING_COORDS(7,8)                   //this initializes the unity lighting and shadow
                 UNITY_FOG_COORDS(9)                    //this initializes the unity fog
