@@ -79,13 +79,11 @@
             }
 
             float3 normal(float3 p){
-                const float2 offset = float2(0.001, 0.0);
-                float3 n = float3(
-                    distanceField(p + offset.xyy) - distanceField(p - offset.xyy),
-                    distanceField(p + offset.yxy) - distanceField(p - offset.yxy),
-                    distanceField(p + offset.yyx) - distanceField(p - offset.yxx)
-                );
-                return normalize(n);
+                float2 e = float2(1.0,-1.0)*0.5773*0.0005;
+                return normalize(	e.xyy *distanceField(p + e.xyy) + 
+                                    e.yxy *distanceField(p + e.yxy) + 					  
+                                    e.yyx *distanceField(p + e.yyx) + 					  
+                                    e.xxx *distanceField(p + e.xxx) );
             }
 
             float hardShadow(float3 ro, float3 rd, float mint, float maxt){
@@ -147,6 +145,7 @@
 
             // ro = ray origin
             // rd = ray direction
+            // t = ray travel distance
             fixed4 raymarching(float3 ro, float3 rd, float depth){
                 fixed4 result = fixed4(1,1,1,1);
                 const int max_iteration = _MaxIterations;

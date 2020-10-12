@@ -1,6 +1,6 @@
 ﻿// Basic lambert on a raymarched sphere
 
-Shader "Mike/Raymarch_lambert"
+Shader "Mike/Raymarch_PBR_Lit_NoRP"
 {
     Properties
     {
@@ -325,13 +325,13 @@ Shader "Mike/Raymarch_lambert"
                 float3 color = raymarch(worldPosition, viewDirection);
 
                 // Tone mapping
-                color = Tonemap_ACES(color);
+                //color = Tonemap_ACES(color);
 
                 // Exponential distance fog
                 // color = lerp(color, 0.8 * float3(0.7, 0.8, 1.0), 1.0 - exp2(-0.011 * distance * distance));
 
                 // Gamma compression
-                color = OECF_sRGBFast(color);
+                //color = OECF_sRGBFast(color);
 
                 // return color;
                 // float3 depth = raymarch(worldPosition, viewDirection);
