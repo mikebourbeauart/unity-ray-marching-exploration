@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Raymarch_lambert_m
-  m_Shader: {fileID: 4800000, guid: 55dd1b3edffb35742a219ec38b0e939a, type: 3}
+  m_Shader: {fileID: 4800000, guid: bef5e476a3750b54e9093bf143046880, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -20,9 +20,9 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Floats:
-    - _Gloss: 0.01
-    - _MaxSteps: 16
-    - _MinDistance: 0.01
+    - _Gloss: 0.57
+    - _MaxSteps: 256
+    - _MinDistance: 0.0001
     - _Radius: 0.5
     - _SpecularPower: 0.01
     - _Steps: 16

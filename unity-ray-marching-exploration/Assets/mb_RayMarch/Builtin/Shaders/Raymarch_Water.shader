@@ -32,6 +32,8 @@ Shader "Mike/Raymarch_water"
             #include "UnityCG.cginc"
             #include "Lighting.cginc"
 
+            #define PI 3.14159265359
+
             float _Radius;
             float4 _Center;
             float4 _Color;
@@ -57,12 +59,17 @@ Shader "Mike/Raymarch_water"
             // Define surface shape
             float map (float3 p) {
                 // Sphere at center pos with radius
-                return distance(p, _Center) - _Radius;
+                //return distance(p, _Center) - _Radius;
+                float s = distance(p, _Center) - _Radius;
+                s += 0.005 * sin(7.0 * p.x + 60.0 * _Time);
+                
+                s += 0.02 * sin(15.0 * p.z + 40.0 * _Time);
+            
+                return s;
             }
 
             // Get normal at surface position
             float3 normal (float3 p){
-                // Epsilon
                 const float eps = 0.01;
 
                 // Gradient
@@ -94,15 +101,14 @@ Shader "Mike/Raymarch_water"
             //------------------------------------------------------------------------------
             // Ray casting
             //------------------------------------------------------------------------------
-            fixed4 raymarch (float3 position, float3 direction) {
+            fixed3 raymarch (float3 position, float3 direction) {
                 for (int i = 0; i < _MaxSteps; i++) {
                     float distance = map(position);
-                    if (distance < _MinDistance)
-                        return renderSurface(position, direction);
-                    
                     position += distance * direction;
+                    if (distance < _MinDistance)
+                        break;         
                 }
-                return fixed4(1,1,1,0);
+                return position;
             }
             
             // Vertex function
@@ -117,7 +123,58 @@ Shader "Mike/Raymarch_water"
             fixed4 frag (v2f i) : SV_Target {
                 float3 worldPosition = i.wPos;
                 float3 viewDirection = normalize(i.wPos - _WorldSpaceCameraPos);
-                return raymarch(worldPosition, viewDirection);
+
+                float3 position = raymarch(worldPosition, viewDirection);
+
+                fixed3 render = renderSurface(position, viewDirection);
+
+                float3 color = (1, 1, 0);
+                
+                color = float3(1,1,1);
+
+                float ior = .7;
+
+                float3 v = normalize(-viewDirection);
+                float3 n = normal(position);
+                float3 l = normalize(float3(.4,.5,.6));
+                float3 h = normalize(v + l);
+                float3 rl = reflect(viewDirection, n);
+                float3 rr = refract(viewDirection, n, ior);
+                
+                float NoV = abs(dot(n, v)) + 1e-5;
+                float NoL = saturate(dot(n, l));
+                float NoH = saturate(dot(n, h));
+                float LoH = saturate(dot(l, h));
+
+                // Back side refract
+                float3 ro2 = position + rr * .05;
+                float3 position_back = raymarch(ro2, viewDirection);
+
+                float3 n2 = normal(ro2);
+                float3 rl2 = reflect(rr, -n2);
+                float3 rr2 = refract(rr,-n2,ior);
+                float fresnel2 = dot(-rr,n2);
+
+                 // Iridescence refraction 
+                // color.r = tex(normalize(refract(rr, -n2, ior * .98))).r;
+                // color.g = tex(normalize(refract(rr, -n2, ior * 1.0))).g;
+                // color.b = tex(normalize(refract(rr, -n2, ior * 1.02))).b;
+
+                // color = mix(texture(iChannel0, rl2).xyz, color, pow(-fresnel2,.2));
+                // color = mix(tex(rl)*.5, color*.7, pow(fresnel1,.15));
+                color += float3(.04, .04, .04);
+
+                color = float3(pow(color,float3(.5, .5, .5)));
+                
+                if (length(position) < 5.0)
+                {
+                    return float4(render, 1); 
+                }
+                else
+                {   
+                    return float4(1,1,1, 0);
+                    
+                }
             }
             ENDCG
         }
