@@ -85,10 +85,11 @@ Shader "Mike/Raymarch_water"
             //------------------------------------------------------------------------------
             // Lighting
             //------------------------------------------------------------------------------
-            fixed4 renderSurface(float3 p, float3 direction){
+            fixed4 lambertSurface(float3 p, float3 direction){
                 float3 n = normal(p);
                 fixed3 l = _WorldSpaceLightPos0.xyz; // Light direction
                 fixed3 lightCol = _LightColor0.rgb; // Light color
+                
                 // Normal dot LightDir
                 fixed NdotL = max(dot(n, l), 0);
 
@@ -123,10 +124,11 @@ Shader "Mike/Raymarch_water"
             fixed4 frag (v2f i) : SV_Target {
                 float3 worldPosition = i.wPos;
                 float3 viewDirection = normalize(i.wPos - _WorldSpaceCameraPos);
+                float dist = 0.;
+                float3 position = worldPosition + dist * viewDirection;
+                position = raymarch(position, viewDirection);
 
-                float3 position = raymarch(worldPosition, viewDirection);
-
-                fixed3 render = renderSurface(position, viewDirection);
+                fixed3 render = lambertSurface(position, viewDirection);
 
                 float3 color = (1, 1, 0);
                 
